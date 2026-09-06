@@ -32,9 +32,9 @@
 
       <!-- Primary KPI Cards -->
       <div class="grid grid-4 stat-grid">
-        <div class="card stat-card accent-purple">
+        <div class="card stat-card accent-blue">
           <div class="stat-card-top">
-            <div class="stat-icon-wrap icon-purple">
+            <div class="stat-icon-wrap icon-blue">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 6.5c0-1.9-2.2-3.5-5-3.5s-5 1.6-5 3.5 2.2 3.2 5 3.5c2.8.3 5 1.6 5 3.5s-2.2 3.5-5 3.5-5-1.6-5-3.5"/></svg>
             </div>
             <div class="stat-trend <%= metrics.revenueTrend.up ? 'trend-up' : 'trend-down' %>">
@@ -46,9 +46,9 @@
           <div class="stat-value"><%= formatMoney(metrics.revenue) %></div>
         </div>
 
-        <div class="card stat-card accent-blue">
+        <div class="card stat-card accent-emerald">
           <div class="stat-card-top">
-            <div class="stat-icon-wrap icon-blue">
+            <div class="stat-icon-wrap icon-emerald">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3H8l-2 4H4v14h16V7h-2l-2-4z"/><path d="M12 11v5"/><path d="M9 14h6"/></svg>
             </div>
             <div class="stat-trend <%= metrics.ordersTrend.up ? 'trend-up' : 'trend-down' %>">
@@ -60,9 +60,9 @@
           <div class="stat-value"><%= metrics.orders %></div>
         </div>
 
-        <div class="card stat-card accent-emerald">
+        <div class="card stat-card accent-cyan">
           <div class="stat-card-top">
-            <div class="stat-icon-wrap icon-emerald">
+            <div class="stat-icon-wrap icon-cyan">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
             </div>
           </div>
@@ -70,9 +70,9 @@
           <div class="stat-value"><%= formatMoney(metrics.avgOrderValue) %></div>
         </div>
 
-        <div class="card stat-card accent-amber">
+        <div class="card stat-card accent-violet">
           <div class="stat-card-top">
-            <div class="stat-icon-wrap icon-amber">
+            <div class="stat-icon-wrap icon-violet">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
             </div>
           </div>
@@ -84,7 +84,7 @@
       <!-- Secondary Stats -->
       <div class="grid grid-3" style="margin-top: 16px;">
         <div class="card mini-stat">
-          <div class="mini-stat-icon ms-purple">
+          <div class="mini-stat-icon ms-emerald">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
           <div class="mini-stat-body">
@@ -132,8 +132,8 @@
           <svg class="chart-svg" viewBox="0 0 <%= W %> <%= H %>" preserveAspectRatio="none">
             <defs>
               <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#7c5cfc" stop-opacity="0.2" />
-                <stop offset="100%" stop-color="#7c5cfc" stop-opacity="0" />
+                <stop offset="0%" stop-color="#0070F8" stop-opacity="0.2" />
+                <stop offset="100%" stop-color="#0070F8" stop-opacity="0" />
               </linearGradient>
             </defs>
             <!-- Grid lines -->
@@ -141,9 +141,9 @@
             <line x1="0" y1="<%= H / 2 %>" x2="<%= W %>" y2="<%= H / 2 %>" stroke="#e8e8ef" stroke-width="1" stroke-dasharray="4,4" />
             <line x1="0" y1="<%= H * 3 / 4 %>" x2="<%= W %>" y2="<%= H * 3 / 4 %>" stroke="#e8e8ef" stroke-width="1" stroke-dasharray="4,4" />
             <path d="<%= areaPath %>" fill="url(#chartFill)" />
-            <path d="<%= linePath %>" fill="none" stroke="#7c5cfc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+            <path d="<%= linePath %>" fill="none" stroke="#0070F8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
             <% points.forEach(function(p) { %>
-              <circle cx="<%= p.x.toFixed(1) %>" cy="<%= p.y.toFixed(1) %>" r="4" fill="#ffffff" stroke="#7c5cfc" stroke-width="2.5">
+              <circle cx="<%= p.x.toFixed(1) %>" cy="<%= p.y.toFixed(1) %>" r="4" fill="#ffffff" stroke="#0070F8" stroke-width="2.5">
                 <title><%= p.d.date %>: <%= formatMoney(p.d.total) %></title>
               </circle>
             <% }) %>
@@ -161,7 +161,7 @@
           <tbody>
             <% recentOrders.forEach(function(o) { %>
               <tr class="row-link" onclick="location.href='/admin/orders/<%= o.id %>'">
-                <td style="font-weight: 600; color: #7c3aed;"><%= o.orderNumber %></td>
+                <td style="font-weight: 600; color: #0070F8;"><%= o.orderNumber %></td>
                 <td>
                   <div class="customer-cell">
                     <div class="customer-avatar"><%= (o.customer ? o.customer.fullName : o.email).charAt(0).toUpperCase() %></div>
