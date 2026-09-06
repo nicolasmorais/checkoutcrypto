@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: 'Products' }) %>
+</head>
+<body>
+  <div class="shell">
+    <%- include('../partials/nav', { active: 'products' }) %>
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Products</div>
+          <div class="page-sub"><%= products.length %> product<%= products.length === 1 ? '' : 's' %></div>
+        </div>
+        <a href="/admin/products/new" class="btn btn-primary">New product</a>
+      </div>
+
+      <div class="card table-wrap">
+        <table>
+          <thead>
+            <tr><th>Imagem</th><th>Nome</th><th>Preço</th><th>Custo</th><th>Checkout URL</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <% products.forEach(function(p) { %>
+              <tr class="row-link" onclick="location.href='/admin/products/<%= p.id %>'">
+                <td><% if (p.imageUrl) { %><img src="<%= p.imageUrl %>" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:6px" /><% } %></td>
+                <td><%= p.name %></td>
+                <td><%= formatMoney(p.price, p.currency) %></td>
+                <td><%= p.cost ? formatMoney(p.cost, p.currency) : '-' %></td>
+                <td>
+                  <div class="checkout-url-cell">
+                    <code>/?product=<%= p.slug %></code>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="event.stopPropagation();navigator.clipboard.writeText('<%= req.protocol %>://<%= req.get('host') %>/?product=<%= p.slug %>').then(()=>this.textContent='Copiado!')">Copiar</button>
+                  </div>
+                </td>
+                <td><span class="badge <%= p.active ? 'badge-green' : 'badge-gray' %>"><%= p.active ? 'Active' : 'Inactive' %></span></td>
+              </tr>
+            <% }) %>
+            <% if (products.length === 0) { %>
+              <tr><td colspan="6" class="stat-sub">No products yet. Create your first one.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

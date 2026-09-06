@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/head', { title: 'Dashboard' }) %>
+</head>
+<body>
+  <div class="shell">
+    <%- include('partials/nav', { active: 'dashboard' }) %>
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="page-sub">Store performance overview</div>
+        </div>
+      </div>
+
+      <form class="date-filter" method="get">
+        <div class="date-filter-presets">
+          <a class="chip <%= filters.range === 'today' ? 'active' : '' %>" href="?range=today">Today</a>
+          <a class="chip <%= filters.range === '7d' ? 'active' : '' %>" href="?range=7d">7 days</a>
+          <a class="chip <%= filters.range === '30d' ? 'active' : '' %>" href="?range=30d">30 days</a>
+          <a class="chip <%= filters.range === '90d' ? 'active' : '' %>" href="?range=90d">90 days</a>
+        </div>
+        <div class="date-filter-custom">
+          <input type="hidden" name="range" value="custom" />
+          <input type="date" name="from" value="<%= filters.from %>" />
+          <span>–</span>
+          <input type="date" name="to" value="<%= filters.to %>" />
+          <button type="submit" class="btn btn-ghost btn-sm">Apply</button>
+        </div>
+      </form>
+
+      <!-- Primary KPI Cards -->
+      <div class="grid grid-4 stat-grid">
+        <div class="card stat-card accent-purple">
+          <div class="stat-card-top">
+            <div class="stat-icon-wrap icon-purple">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 6.5c0-1.9-2.2-3.5-5-3.5s-5 1.6-5 3.5 2.2 3.2 5 3.5c2.8.3 5 1.6 5 3.5s-2.2 3.5-5 3.5-5-1.6-5-3.5"/></svg>
+            </div>
+            <div class="stat-trend <%= metrics.revenueTrend.up ? 'trend-up' : 'trend-down' %>">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l7-7 7 7M12 5v14"/></svg>
+              <%= metrics.revenueTrend.pct %>%
+            </div>
+          </div>
+          <div class="stat-label">Revenue</div>
+          <div class="stat-value"><%= formatMoney(metrics.revenue) %></div>
+        </div>
+
+        <div class="card stat-card accent-blue">
+          <div class="stat-card-top">
+            <div class="stat-icon-wrap icon-blue">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3H8l-2 4H4v14h16V7h-2l-2-4z"/><path d="M12 11v5"/><path d="M9 14h6"/></svg>
+            </div>
+            <div class="stat-trend <%= metrics.ordersTrend.up ? 'trend-up' : 'trend-down' %>">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l7-7 7 7M12 5v14"/></svg>
+              <%= metrics.ordersTrend.pct %>%
+            </div>
+          </div>
+          <div class="stat-label">Orders</div>
+          <div class="stat-value"><%= metrics.orders %></div>
+        </div>
+
+        <div class="card stat-card accent-emerald">
+          <div class="stat-card-top">
+            <div class="stat-icon-wrap icon-emerald">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            </div>
+          </div>
+          <div class="stat-label">Avg. order value</div>
+          <div class="stat-value"><%= formatMoney(metrics.avgOrderValue) %></div>
+        </div>
+
+        <div class="card stat-card accent-amber">
+          <div class="stat-card-top">
+            <div class="stat-icon-wrap icon-amber">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            </div>
+          </div>
+          <div class="stat-label">Conversion rate</div>
+          <div class="stat-value"><%= metrics.conversionRate %>%</div>
+        </div>
+      </div>
+
+      <!-- Secondary Stats -->
+      <div class="grid grid-3" style="margin-top: 16px;">
+        <div class="card mini-stat">
+          <div class="mini-stat-icon ms-purple">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="mini-stat-body">
+            <div class="stat-label">Paid orders</div>
+            <div class="stat-value"><%= metrics.paidOrders %></div>
+          </div>
+        </div>
+        <div class="card mini-stat">
+          <div class="mini-stat-icon ms-blue">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="mini-stat-body">
+            <div class="stat-label">Pending payments</div>
+            <div class="stat-value"><%= metrics.pendingPayments %></div>
+          </div>
+        </div>
+        <div class="card mini-stat">
+          <div class="mini-stat-icon ms-rose">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          </div>
+          <div class="mini-stat-body">
+            <div class="stat-label">Failed payments</div>
+            <div class="stat-value"><%= metrics.failedPayments %></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Revenue Chart -->
+      <div class="section-title">Revenue over time</div>
+      <div class="card chart-card">
+        <% if (chartData.length === 0) { %>
+          <div class="stat-sub chart-empty">No paid orders in this period yet.</div>
+        <% } else {
+          const W = 600, H = 220, PAD = 16;
+          const max = Math.max(...chartData.map(d => d.total), 1);
+          const n = chartData.length;
+          const points = chartData.map((d, i) => {
+            const x = n > 1 ? (i / (n - 1)) * W : W / 2;
+            const y = H - PAD - (d.total / max) * (H - PAD * 2);
+            return { x, y, d };
+          });
+          const linePath = points.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ');
+          const areaPath = linePath + ` L${points[points.length - 1].x.toFixed(1)},${H} L${points[0].x.toFixed(1)},${H} Z`;
+        %>
+          <svg class="chart-svg" viewBox="0 0 <%= W %> <%= H %>" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#7c5cfc" stop-opacity="0.2" />
+                <stop offset="100%" stop-color="#7c5cfc" stop-opacity="0" />
+              </linearGradient>
+            </defs>
+            <!-- Grid lines -->
+            <line x1="0" y1="<%= H / 4 %>" x2="<%= W %>" y2="<%= H / 4 %>" stroke="#e8e8ef" stroke-width="1" stroke-dasharray="4,4" />
+            <line x1="0" y1="<%= H / 2 %>" x2="<%= W %>" y2="<%= H / 2 %>" stroke="#e8e8ef" stroke-width="1" stroke-dasharray="4,4" />
+            <line x1="0" y1="<%= H * 3 / 4 %>" x2="<%= W %>" y2="<%= H * 3 / 4 %>" stroke="#e8e8ef" stroke-width="1" stroke-dasharray="4,4" />
+            <path d="<%= areaPath %>" fill="url(#chartFill)" />
+            <path d="<%= linePath %>" fill="none" stroke="#7c5cfc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+            <% points.forEach(function(p) { %>
+              <circle cx="<%= p.x.toFixed(1) %>" cy="<%= p.y.toFixed(1) %>" r="4" fill="#ffffff" stroke="#7c5cfc" stroke-width="2.5">
+                <title><%= p.d.date %>: <%= formatMoney(p.d.total) %></title>
+              </circle>
+            <% }) %>
+          </svg>
+        <% } %>
+      </div>
+
+      <!-- Recent Orders Table -->
+      <div class="section-title">Recent orders</div>
+      <div class="card table-wrap">
+        <table>
+          <thead>
+            <tr><th>Order #</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Created</th></tr>
+          </thead>
+          <tbody>
+            <% recentOrders.forEach(function(o) { %>
+              <tr class="row-link" onclick="location.href='/admin/orders/<%= o.id %>'">
+                <td style="font-weight: 600; color: #7c3aed;"><%= o.orderNumber %></td>
+                <td>
+                  <div class="customer-cell">
+                    <div class="customer-avatar"><%= (o.customer ? o.customer.fullName : o.email).charAt(0).toUpperCase() %></div>
+                    <span><%= o.customer ? o.customer.fullName : o.email %></span>
+                  </div>
+                </td>
+                <td style="font-weight: 600;"><%= formatMoney(o.total, o.currency) %></td>
+                <td><span class="badge <%= o.paymentStatus === 'succeeded' ? 'badge-green' : o.paymentStatus === 'failed' ? 'badge-red' : 'badge-amber' %>"><%= o.paymentStatus %></span></td>
+                <td><span class="badge badge-gray"><%= o.status %></span></td>
+                <td style="color: #6b7280;"><%= formatDate(o.createdAt) %></td>
+              </tr>
+            <% }) %>
+            <% if (recentOrders.length === 0) { %>
+              <tr><td colspan="6" class="stat-sub" style="text-align: center; padding: 32px;">No orders in this period.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

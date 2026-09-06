@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pagamento com Cartão</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0f;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .wrapper {
+      width: 100%; max-width: 480px;
+      background: #12121a;
+      border: 1px solid #2a2a3a;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #2a2a3a;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .header-icon { font-size: 24px; }
+    .header-text { font-size: 15px; font-weight: 600; color: #e8e8f0; }
+    iframe {
+      width: 100%; height: 650px; border: none;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <span class="header-icon">💳</span>
+      <span class="header-text">Pagamento Seguro</span>
+    </div>
+    <iframe
+      src="https://exchange.mercuryo.io/?widget_id=bb88eeb2-fbde-42fb-ac9f-bb5300603df9&type=buy&return_url=https%3A%2F%2Fpay.southpay.io%2FRL6XFSEIGZSNXXUO%3Fonramp%3Dsuccess&fiat_currency=USD&fix_fiat_currency=true&fiat_amount=50.00000000000000000000&fix_fiat_amount=true&currency=USDC&fix_currency=true&payment_method=card&fix_payment_method=true&network=POLYGON&fix_network=true&redirect_url=https://pay.southpay.io/RL6XFSEIGZSNXXUO?onramp=success&country_code=BR&address=0x03c53759dca4e122688fd99d240ab9723dd686b6&hide_address=true&merchant_transaction_id=a53b0e6b-9241-4aec-9db9-554a5cca3888&signature=v2:3d78e140d83d1664deaca2818dc2e198c22ab466555970ac3b7019cd4e42417fd8b1b3b4abb25e3c514b897a13741e708b8025d1a97296bacdc7a2ce28c57611"
+      allow="payment"
+    ></iframe>
+  </div>
+</body>
+</html>

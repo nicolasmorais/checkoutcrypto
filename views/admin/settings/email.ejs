@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: 'Email settings' }) %>
+</head>
+<body>
+  <div class="shell">
+    <%- include('../partials/nav', { active: 'settings-email' }) %>
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Email settings</div>
+          <div class="page-sub">Resend configuration and transactional emails</div>
+        </div>
+      </div>
+
+      <% if (saved) { %><div class="alert alert-success">Settings saved.</div><% } %>
+      <% if (testSent) { %><div class="alert alert-success">Test email sent to <%= testTo %>.</div><% } %>
+      <% if (testError) { %><div class="alert alert-error">Couldn't send test email: <%= testError %></div><% } %>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="stat-label">Resend connection (set via environment variables, not editable here)</div>
+        <dl class="kv" style="margin-top:12px">
+          <dt>API key</dt><dd><%= env.hasApiKey ? 'Configured' : 'Missing — set RESEND_API_KEY' %></dd>
+          <dt>From address</dt><dd><%= env.fromEmail || '—' %></dd>
+        </dl>
+        <% if (env.fromEmail && env.fromEmail.includes('resend.dev')) { %>
+          <div class="stat-sub" style="margin-top:10px">
+            You're using Resend's shared sandbox address — it only delivers to your own Resend account email.
+            Verify your own domain in Resend and set <code>RESEND_FROM_EMAIL</code> to send to real customers.
+          </div>
+        <% } %>
+      </div>
+
+      <form method="post" action="/admin/settings/email">
+        <div class="card">
+          <div class="checkbox-row">
+            <input type="checkbox" id="emailEnabled" name="emailEnabled" <%= settings.emailEnabled ? 'checked' : '' %> />
+            <label for="emailEnabled" style="margin:0">Send transactional emails automatically</label>
+          </div>
+          <div class="stat-sub" style="margin-top:8px">
+            When off, order confirmation, payment failed and tracking emails are logged but not sent.
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top:16px">Save</button>
+      </form>
+
+      <form method="post" action="/admin/settings/email/test" style="margin-top:12px; display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap">
+        <div class="field" style="margin-bottom:0">
+          <label>Send test email to</label>
+          <input type="email" name="to" value="<%= testTo %>" style="width:260px" />
+        </div>
+        <button type="submit" class="btn btn-ghost">Send test email</button>
+      </form>
+
+      <div class="section-title">Email templates</div>
+      <div class="page-sub" style="margin:-8px 0 14px">Edit the subject and content of every automatic email, in each language.</div>
+      <div class="card table-wrap">
+        <table>
+          <thead><tr><th>Email</th><th>Language</th><th>Subject</th><th></th></tr></thead>
+          <tbody>
+            <% templates.forEach(function(t) { %>
+              <tr class="row-link" onclick="location.href='/admin/settings/email-templates/<%= t.id %>'">
+                <td><%= templateLabels[t.key] || t.key %></td>
+                <td><span class="badge badge-gray"><%= localeLabels[t.locale] || t.locale %></span></td>
+                <td><%= t.subject %></td>
+                <td><a href="/admin/settings/email-templates/<%= t.id %>" class="btn btn-ghost btn-sm" onclick="event.stopPropagation()">Edit</a></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

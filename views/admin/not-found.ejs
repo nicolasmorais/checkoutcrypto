@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/head', { title: 'Not found' }) %>
+</head>
+<body>
+  <div class="shell">
+    <%- include('partials/nav', { active: '' }) %>
+    <main class="main">
+      <div class="card"><%= entity %> not found.</div>
+    </main>
+  </div>
+</body>
+</html>

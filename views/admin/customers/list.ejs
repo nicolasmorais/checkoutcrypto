@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: 'Customers' }) %>
+</head>
+<body>
+  <div class="shell">
+    <%- include('../partials/nav', { active: 'customers' }) %>
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Customers</div>
+          <div class="page-sub"><%= customers.length %> customer<%= customers.length === 1 ? '' : 's' %></div>
+        </div>
+      </div>
+
+      <div class="card table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Orders</th><th>Revenue</th><th>Country</th><th>Last order</th></tr></thead>
+          <tbody>
+            <% customers.forEach(function(c) { %>
+              <tr class="row-link" onclick="location.href='/admin/customers/<%= c.id %>'">
+                <td><%= c.fullName %></td>
+                <td><%= c.email %></td>
+                <td><%= c.phone || '—' %></td>
+                <td><%= c.orderCount %></td>
+                <td><%= formatMoney(c.revenue) %></td>
+                <td><%= c.country %></td>
+                <td><%= c.lastOrderAt ? formatDate(c.lastOrderAt) : '—' %></td>
+              </tr>
+            <% }) %>
+            <% if (customers.length === 0) { %>
+              <tr><td colspan="7" class="stat-sub">No customers yet.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

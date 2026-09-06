@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: 'Orders' }) %>
+</head>
+<body>
+  <div class="shell">
+    <%- include('../partials/nav', { active: 'orders' }) %>
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Orders</div>
+          <div class="page-sub"><%= orders.length %> order<%= orders.length === 1 ? '' : 's' %></div>
+        </div>
+      </div>
+
+      <%
+        const dateFilterExtra = ['paymentStatus', 'country', 'product', 'q']
+          .filter((k) => filters[k])
+          .map((k) => `&${k}=${encodeURIComponent(filters[k])}`)
+          .join('');
+      %>
+      <form class="date-filter" method="get">
+        <div class="date-filter-presets">
+          <a class="chip <%= !filters.range ? 'active' : '' %>" href="?<%= dateFilterExtra.replace(/^&/, '') %>">All time</a>
+          <a class="chip <%= filters.range === 'today' ? 'active' : '' %>" href="?range=today<%= dateFilterExtra %>">Today</a>
+          <a class="chip <%= filters.range === 'yesterday' ? 'active' : '' %>" href="?range=yesterday<%= dateFilterExtra %>">Yesterday</a>
+          <a class="chip <%= filters.range === '7d' ? 'active' : '' %>" href="?range=7d<%= dateFilterExtra %>">7 days</a>
+          <a class="chip <%= filters.range === '30d' ? 'active' : '' %>" href="?range=30d<%= dateFilterExtra %>">30 days</a>
+        </div>
+        <div class="date-filter-custom">
+          <input type="hidden" name="range" value="custom" />
+          <input type="date" name="from" value="<%= filters.from || '' %>" />
+          <span>–</span>
+          <input type="date" name="to" value="<%= filters.to || '' %>" />
+          <input type="hidden" name="paymentStatus" value="<%= filters.paymentStatus || '' %>" />
+          <input type="hidden" name="country" value="<%= filters.country || '' %>" />
+          <input type="hidden" name="product" value="<%= filters.product || '' %>" />
+          <input type="hidden" name="q" value="<%= filters.q || '' %>" />
+          <button type="submit" class="btn btn-ghost btn-sm">Apply</button>
+        </div>
+      </form>
+
+      <form class="filters" method="get">
+        <input type="hidden" name="range" value="<%= filters.range || '' %>" />
+        <input type="hidden" name="from" value="<%= filters.from || '' %>" />
+        <input type="hidden" name="to" value="<%= filters.to || '' %>" />
+        <select name="paymentStatus" onchange="this.form.submit()">
+          <option value="">Any payment status</option>
+          <option value="succeeded" <%= filters.paymentStatus === 'succeeded' ? 'selected' : '' %>>Paid</option>
+          <option value="pending" <%= filters.paymentStatus === 'pending' ? 'selected' : '' %>>Pending</option>
+          <option value="failed" <%= filters.paymentStatus === 'failed' ? 'selected' : '' %>>Failed</option>
+        </select>
+        <input type="text" name="country" placeholder="Country" value="<%= filters.country || '' %>" />
+        <input type="text" name="product" placeholder="Product" value="<%= filters.product || '' %>" />
+        <input type="text" name="q" placeholder="Search order #, email, name" value="<%= filters.q || '' %>" />
+        <button type="submit" class="btn btn-ghost btn-sm">Filter</button>
+      </form>
+
+      <div class="card table-wrap">
+        <table>
+          <thead>
+            <tr><th>Order #</th><th>Customer</th><th>Email</th><th>Country</th><th>Product</th><th>Total</th><th>Payment</th><th>Status</th><th>Provider</th><th>Created</th></tr>
+          </thead>
+          <tbody>
+            <% orders.forEach(function(o) { %>
+              <tr class="row-link" onclick="location.href='/admin/orders/<%= o.id %>'">
+                <td><%= o.orderNumber %></td>
+                <td><%= o.customer ? o.customer.fullName : '—' %></td>
+                <td><%= o.email %></td>
+                <td><%= o.shippingAddress ? o.shippingAddress.country : '—' %></td>
+                <td><%= o.items[0] ? o.items[0].name : '—' %></td>
+                <td><%= formatMoney(o.total, o.currency) %></td>
+                <td><span class="badge <%= o.paymentStatus === 'succeeded' ? 'badge-green' : o.paymentStatus === 'failed' ? 'badge-red' : 'badge-amber' %>"><%= o.paymentStatus %></span></td>
+                <td><span class="badge badge-gray"><%= o.status %></span></td>
+                <td><%= o.southpayProviderName || '—' %></td>
+                <td><%= formatDate(o.createdAt) %></td>
+              </tr>
+            <% }) %>
+            <% if (orders.length === 0) { %>
+              <tr><td colspan="10" class="stat-sub">No orders match these filters.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

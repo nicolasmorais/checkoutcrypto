@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/head', { title: 'Login' }) %>
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-glow-1"></div>
+    <div class="login-glow-2"></div>
+    <div class="login-card">
+      <div class="login-mark">S</div>
+      <div class="login-title">Welcome back</div>
+      <div class="login-sub">Sign in to manage your store.</div>
+
+      <% if (error) { %>
+        <div class="alert alert-error"><%= error %></div>
+      <% } %>
+
+      <form method="post" action="/admin/login">
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required autofocus />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Sign in</button>
+      </form>
+
+      <div class="login-foot">Store Admin · Secure access</div>
+    </div>
+  </div>
+</body>
+</html>

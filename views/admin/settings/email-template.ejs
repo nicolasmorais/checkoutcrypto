@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: label + ' (' + localeLabel + ')' }) %>
+</head>
+<body>
+  <div class="shell">
+    <%- include('../partials/nav', { active: 'settings-email' }) %>
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <div class="page-title"><%= label %></div>
+          <div class="page-sub"><%= localeLabel %> · <a href="/admin/settings/email">← Back to Email settings</a></div>
+        </div>
+        <form method="post" action="/admin/settings/email-templates/<%= template.id %>/reset" onsubmit="return confirm('Reset this template to the default text?')">
+          <button type="submit" class="btn btn-ghost">Reset to default</button>
+        </form>
+      </div>
+
+      <% if (saved) { %><div class="alert alert-success">Template saved.</div><% } %>
+      <% if (testSent) { %><div class="alert alert-success">Test email sent to <%= testTo %> (with sample data).</div><% } %>
+      <% if (testError) { %><div class="alert alert-error">Couldn't send test email: <%= testError %></div><% } %>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="stat-label">Available variables</div>
+        <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:6px">
+          <% vars.forEach(function(v) { %>
+            <span class="badge badge-accent" style="font-family:monospace">{{<%= v %>}}</span>
+          <% }) %>
+        </div>
+        <div class="stat-sub" style="margin-top:10px">Use these inside the subject or body — they're replaced with the order's real data when the email is sent.</div>
+      </div>
+
+      <form method="post" action="/admin/settings/email-templates/<%= template.id %>/test" style="margin-bottom:16px; display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap">
+        <div class="field" style="margin-bottom:0">
+          <label>Send test email to</label>
+          <input type="email" name="to" value="<%= testTo %>" style="width:260px" />
+        </div>
+        <button type="submit" class="btn btn-ghost">Send test with sample data</button>
+      </form>
+
+      <form method="post" action="/admin/settings/email-templates/<%= template.id %>">
+        <div class="card">
+          <div class="field">
+            <label>Subject</label>
+            <input type="text" name="subject" value="<%= template.subject %>" required />
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Body (HTML)</label>
+            <textarea name="bodyHtml" rows="18" style="font-family:monospace; font-size:12.5px;"><%= template.bodyHtml %></textarea>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top:16px">Save template</button>
+      </form>
+    </main>
+  </div>
+</body>
+</html>

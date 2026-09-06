@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: 'Order ' + order.orderNumber }) %>
+</head>
+<body>
+  <div class="shell">
+    <%- include('../partials/nav', { active: 'orders' }) %>
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Order <%= order.orderNumber %></div>
+          <div class="page-sub"><%= formatDate(order.createdAt) %></div>
+        </div>
+        <form method="post" action="/admin/orders/<%= order.id %>/status" style="display:flex;gap:8px">
+          <select name="status">
+            <% ['checkout_started','pending_payment','processing','paid','payment_failed','cancelled','refunded'].forEach(function(s) { %>
+              <option value="<%= s %>" <%= order.status === s ? 'selected' : '' %>><%= s %></option>
+            <% }) %>
+          </select>
+          <button type="submit" class="btn btn-ghost">Update status</button>
+        </form>
+      </div>
+
+      <% if (trackingSaved) { %><div class="alert alert-success">Tracking info saved.</div><% } %>
+      <% if (trackingError) { %><div class="alert alert-error">Tracking info saved, but the email failed to send.</div><% } %>
+
+      <div class="grid grid-3">
+        <div class="card">
+          <div class="stat-label">Total</div>
+          <div class="stat-value"><%= formatMoney(order.total, order.currency) %></div>
+          <div class="stat-sub">Subtotal <%= formatMoney(order.subtotal, order.currency) %> · Shipping <%= formatMoney(order.shipping, order.currency) %></div>
+        </div>
+        <div class="card">
+          <div class="stat-label">Payment status</div>
+          <div class="stat-value"><span class="badge <%= order.paymentStatus === 'succeeded' ? 'badge-green' : order.paymentStatus === 'failed' ? 'badge-red' : 'badge-amber' %>"><%= order.paymentStatus %></span></div>
+        </div>
+        <div class="card">
+          <div class="stat-label">Order status</div>
+          <div class="stat-value"><span class="badge badge-gray"><%= order.status %></span></div>
+        </div>
+      </div>
+
+      <div class="section-title">Customer</div>
+      <div class="card grid grid-2">
+        <dl class="kv">
+          <dt>Name</dt><dd><%= order.customer ? order.customer.fullName : '—' %></dd>
+          <dt>Email</dt><dd><%= order.email %></dd>
+          <dt>Phone</dt><dd><%= order.phone || '—' %></dd>
+        </dl>
+        <dl class="kv">
+          <% if (order.shippingAddress) { %>
+            <dt>Address</dt><dd><%= order.shippingAddress.street %><% if (order.shippingAddress.street2) { %>, <%= order.shippingAddress.street2 %><% } %></dd>
+            <dt>City</dt><dd><%= order.shippingAddress.city %><% if (order.shippingAddress.state) { %>, <%= order.shippingAddress.state %><% } %></dd>
+            <dt>Zip</dt><dd><%= order.shippingAddress.zipCode %></dd>
+            <dt>Country</dt><dd><%= order.shippingAddress.country %></dd>
+          <% } else { %>
+            <dt>Address</dt><dd>—</dd>
+          <% } %>
+        </dl>
+      </div>
+
+      <div class="section-title">Items</div>
+      <div class="card table-wrap">
+        <table>
+          <thead><tr><th>Item</th><th>SKU</th><th>Qty</th><th>Unit price</th><th>Total</th></tr></thead>
+          <tbody>
+            <% order.items.forEach(function(it) { %>
+              <tr>
+                <td><%= it.name %></td>
+                <td><%= it.sku || '—' %></td>
+                <td><%= it.quantity %></td>
+                <td><%= formatMoney(it.unitPrice, order.currency) %></td>
+                <td><%= formatMoney(it.total, order.currency) %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-title">Shipping &amp; tracking</div>
+      <div class="card">
+        <form method="post" action="/admin/orders/<%= order.id %>/tracking">
+          <div class="grid grid-3">
+            <div class="field"><label>Carrier</label><input type="text" name="trackingCarrier" placeholder="e.g. DHL, FedEx" value="<%= order.trackingCarrier || '' %>" /></div>
+            <div class="field"><label>Tracking number</label><input type="text" name="trackingNumber" value="<%= order.trackingNumber || '' %>" /></div>
+            <div class="field"><label>Tracking URL</label><input type="url" name="trackingUrl" placeholder="https://…" value="<%= order.trackingUrl || '' %>" /></div>
+          </div>
+          <div class="checkbox-row" style="margin-top:4px">
+            <input type="checkbox" id="sendEmail" name="sendEmail" checked />
+            <label for="sendEmail" style="margin:0">Email the customer this tracking info</label>
+          </div>
+          <div style="margin-top:14px; display:flex; align-items:center; gap:12px">
+            <button type="submit" class="btn btn-primary">Save &amp; notify</button>
+            <% if (order.trackingSentAt) { %><span class="stat-sub">Last sent <%= formatDate(order.trackingSentAt) %></span><% } %>
+          </div>
+        </form>
+      </div>
+
+      <div class="section-title">SouthPay</div>
+      <div class="card">
+        <dl class="kv">
+          <dt>Reference</dt><dd><%= order.southpayReference || '—' %></dd>
+          <dt>Payment intent</dt><dd><%= order.southpayPaymentIntentId || '—' %></dd>
+          <dt>Provider</dt><dd><%= order.southpayProviderName || '—' %></dd>
+          <dt>Provider TXID</dt><dd><%= order.southpayProviderTxid || '—' %></dd>
+          <dt>Onramp session</dt><dd><%= order.southpayOnrampSessionId || '—' %></dd>
+          <dt>Onramp status</dt><dd><%= order.southpayOnrampStatus || '—' %></dd>
+        </dl>
+      </div>
+
+      <div class="section-title">Payment attempts</div>
+      <div class="card table-wrap">
+        <table>
+          <thead><tr><th>Session</th><th>Status</th><th>Amount</th><th>Provider</th><th>Error</th><th>When</th></tr></thead>
+          <tbody>
+            <% order.paymentAttempts.forEach(function(a) { %>
+              <tr>
+                <td><%= a.sessionId || '—' %></td>
+                <td><span class="badge <%= a.status === 'succeeded' ? 'badge-green' : a.status === 'failed' ? 'badge-red' : 'badge-amber' %>"><%= a.status %></span></td>
+                <td><%= formatMoney(a.amount, a.currency) %></td>
+                <td><%= a.providerName || '—' %></td>
+                <td><%= a.errorMessage || '—' %></td>
+                <td><%= formatDate(a.createdAt) %></td>
+              </tr>
+            <% }) %>
+            <% if (order.paymentAttempts.length === 0) { %>
+              <tr><td colspan="6" class="stat-sub">No payment attempts recorded.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-title">Related webhooks</div>
+      <div class="card table-wrap">
+        <table>
+          <thead><tr><th>Event type</th><th>Processed</th><th>Error</th><th>Received</th></tr></thead>
+          <tbody>
+            <% webhookEvents.forEach(function(w) { %>
+              <tr>
+                <td><%= w.eventType %></td>
+                <td><span class="badge <%= w.processed ? 'badge-green' : 'badge-amber' %>"><%= w.processed ? 'Yes' : 'No' %></span></td>
+                <td><%= w.error || '—' %></td>
+                <td><%= formatDate(w.createdAt) %></td>
+              </tr>
+            <% }) %>
+            <% if (webhookEvents.length === 0) { %>
+              <tr><td colspan="4" class="stat-sub">No webhook events linked to this order yet.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

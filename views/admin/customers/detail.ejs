@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: customer.fullName }) %>
+</head>
+<body>
+  <div class="shell">
+    <%- include('../partials/nav', { active: 'customers' }) %>
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <div class="page-title"><%= customer.fullName %></div>
+          <div class="page-sub"><%= customer.email %></div>
+        </div>
+      </div>
+
+      <div class="section-title">Addresses</div>
+      <div class="card table-wrap">
+        <table>
+          <thead><tr><th>Street</th><th>City</th><th>Zip</th><th>Country</th></tr></thead>
+          <tbody>
+            <% customer.addresses.forEach(function(a) { %>
+              <tr><td><%= a.street %></td><td><%= a.city %></td><td><%= a.zipCode %></td><td><%= a.country %></td></tr>
+            <% }) %>
+            <% if (customer.addresses.length === 0) { %>
+              <tr><td colspan="4" class="stat-sub">No addresses on file.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-title">Orders</div>
+      <div class="card table-wrap">
+        <table>
+          <thead><tr><th>Order #</th><th>Product</th><th>Total</th><th>Payment</th><th>Status</th><th>Created</th></tr></thead>
+          <tbody>
+            <% customer.orders.forEach(function(o) { %>
+              <tr class="row-link" onclick="location.href='/admin/orders/<%= o.id %>'">
+                <td><%= o.orderNumber %></td>
+                <td><%= o.items[0] ? o.items[0].name : '—' %></td>
+                <td><%= formatMoney(o.total, o.currency) %></td>
+                <td><span class="badge <%= o.paymentStatus === 'succeeded' ? 'badge-green' : o.paymentStatus === 'failed' ? 'badge-red' : 'badge-amber' %>"><%= o.paymentStatus %></span></td>
+                <td><span class="badge badge-gray"><%= o.status %></span></td>
+                <td><%= formatDate(o.createdAt) %></td>
+              </tr>
+            <% }) %>
+            <% if (customer.orders.length === 0) { %>
+              <tr><td colspan="6" class="stat-sub">No orders yet.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

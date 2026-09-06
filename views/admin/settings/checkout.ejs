@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: 'Checkout settings' }) %>
+</head>
+<body>
+  <div class="shell">
+    <%- include('../partials/nav', { active: 'settings-checkout' }) %>
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Checkout settings</div>
+          <div class="page-sub">Store branding and checkout defaults</div>
+        </div>
+      </div>
+
+      <% if (saved) { %><div class="alert alert-success">Settings saved.</div><% } %>
+
+      <form method="post" action="/admin/settings/checkout">
+        <div class="card">
+          <div class="grid grid-2">
+            <div class="field"><label>Store name</label><input type="text" name="storeName" value="<%= settings.storeName %>" required /></div>
+            <div class="field"><label>Store logo URL</label><input type="text" name="storeLogo" value="<%= settings.storeLogo || '' %>" /></div>
+            <div class="field"><label>Support email</label><input type="email" name="supportEmail" value="<%= settings.supportEmail || '' %>" /></div>
+            <div class="field"><label>Support phone</label><input type="text" name="supportPhone" value="<%= settings.supportPhone || '' %>" /></div>
+            <div class="field"><label>Default currency</label><input type="text" name="defaultCurrency" maxlength="3" value="<%= settings.defaultCurrency %>" /></div>
+            <div class="field"><label>Checkout primary color</label><input type="text" name="checkoutPrimaryColor" value="<%= settings.checkoutPrimaryColor %>" /></div>
+            <div class="field"><label>Checkout button text</label><input type="text" name="checkoutButtonText" value="<%= settings.checkoutButtonText %>" /></div>
+          </div>
+          <div class="checkbox-row" style="margin-top:6px">
+            <input type="checkbox" id="checkoutSecureBadge" name="checkoutSecureBadge" <%= settings.checkoutSecureBadge ? 'checked' : '' %> />
+            <label for="checkoutSecureBadge" style="margin:0">Show "secure checkout" badge</label>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top:16px">Save</button>
+      </form>
+    </main>
+  </div>
+</body>
+</html>

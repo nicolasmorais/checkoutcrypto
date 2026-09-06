@@ -1,0 +1,394 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Admin ──────────────────────────────────────────────────────────
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  auditLogs AuditLog[]
+
+  @@map("admin_users")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  adminUserId String?
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+  action      String
+  entity      String
+  entityId    String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ── Catalog ────────────────────────────────────────────────────────
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  sku         String   @unique
+  description String?
+  shortDescription String?
+  imageUrl    String?
+  gallery     Json     @default("[]") // TEMP: String[] on postgres, Json on sqlite
+  active      Boolean  @default(true)
+
+  price            Int    // cents
+  cost             Int?   // cents
+  currency         String @default("USD")
+  quantity         Int    @default(0)
+
+  shippingLabel String?
+  freeShipping  Boolean @default(false)
+  stockStatus   String  @default("in_stock") // in_stock | out_of_stock | backorder
+
+  checkoutTitle       String?
+  checkoutSubtitle    String?
+  checkoutImage       String?
+  checkoutButtonText  String?
+  successPageTitle    String?
+  successPageMessage  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  variants         ProductVariant[]
+  orderItems       OrderItem[]
+  checkoutSessions CheckoutSession[]
+  prices           ProductPrice[]
+  translations     ProductTranslation[]
+
+  @@map("products")
+}
+
+// Fixed price per currency (not exchange-rate converted). Falls back to
+// Product.price/currency when no row exists for the requested currency.
+model ProductPrice {
+  id             String  @id @default(cuid())
+  productId      String
+  product        Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  currency       String
+  price          Int // cents
+  compareAtPrice Int? // cents
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, currency])
+  @@map("product_prices")
+}
+
+// Per-language overrides of customer-facing product copy. The base Product
+// fields are the "en" (English) content; rows here override for other locales.
+model ProductTranslation {
+  id                 String  @id @default(cuid())
+  productId          String
+  product            Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  locale             String // "es" | "fr" | "de" | ...
+  name               String?
+  description        String?
+  shortDescription   String?
+  checkoutTitle      String?
+  checkoutSubtitle   String?
+  checkoutButtonText String?
+  successPageTitle   String?
+  successPageMessage String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, locale])
+  @@map("product_translations")
+}
+
+model ProductVariant {
+  id             String  @id @default(cuid())
+  productId      String
+  product        Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name           String
+  sku            String  @unique
+  quantity       Int     @default(1)
+  price          Int     // cents
+  compareAtPrice Int?    // cents
+  imageUrl       String?
+  active         Boolean @default(true)
+  sortOrder      Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderItems       OrderItem[]
+  checkoutSessions CheckoutSession[]
+
+  @@index([productId])
+  @@map("product_variants")
+}
+
+// ── Customers ──────────────────────────────────────────────────────
+
+model Customer {
+  id        String   @id @default(cuid())
+  fullName  String
+  email     String   @unique
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  addresses        Address[]
+  orders           Order[]
+  checkoutSessions CheckoutSession[]
+
+  @@map("customers")
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  fullName   String
+  street     String
+  street2    String?
+  city       String
+  state      String?
+  zipCode    String
+  country    String
+  phone      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  orders Order[]
+
+  @@index([customerId])
+  @@map("addresses")
+}
+
+// ── Orders ─────────────────────────────────────────────────────────
+
+// TEMP: real enums on postgres; sqlite (Prisma) doesn't support enums, so
+// these are plain Strings for now. Application code only ever compares
+// string literals, so this is a no-op for behavior either way.
+// enum OrderStatus { checkout_started pending_payment processing paid payment_failed cancelled refunded }
+// enum PaymentStatus { none pending processing succeeded failed refunded }
+
+model Order {
+  id         String @id @default(cuid())
+  publicId   String @unique @default(cuid())
+  orderNumber String @unique
+
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  status        String @default("checkout_started") // TEMP: OrderStatus enum on postgres
+  paymentStatus String @default("none")             // TEMP: PaymentStatus enum on postgres
+
+  currency String @default("USD")
+  locale   String @default("en") // "en" | "es" | "fr" | "de" — drives which email template is sent
+  subtotal Int    @default(0)
+  shipping Int    @default(0)
+  discount Int    @default(0)
+  total    Int    @default(0)
+
+  email String
+  phone String?
+
+  shippingAddressId String?
+  shippingAddress   Address? @relation(fields: [shippingAddressId], references: [id], onDelete: SetNull)
+
+  southpayPaymentIntentId String?
+  southpayReference       String? @unique
+  southpayProviderName    String?
+  southpayProviderTxid    String?
+  southpayOnrampSessionId String?
+  southpayOnrampStatus    String?
+
+  trackingCarrier String?
+  trackingNumber  String?
+  trackingUrl     String?
+  trackingSentAt  DateTime?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  paidAt      DateTime?
+  cancelledAt DateTime?
+
+  items            OrderItem[]
+  payments         Payment[]
+  paymentAttempts  PaymentAttempt[]
+  checkoutSessions CheckoutSession[]
+
+  @@index([email])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  variantId String?
+  variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  name      String
+  sku       String?
+  quantity  Int    @default(1)
+  unitPrice Int    // cents
+  total     Int    // cents
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+// ── Payments ───────────────────────────────────────────────────────
+
+model Payment {
+  id                String   @id @default(cuid())
+  orderId           String
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider          String   @default("southpay")
+  providerPaymentId String?
+  providerReference String?  @unique
+  amount            Int
+  currency          String   @default("USD")
+  status            String   @default("pending")
+  providerName      String?
+  providerTxid      String?
+  metadata          Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  attempts PaymentAttempt[]
+
+  @@index([orderId])
+  @@map("payments")
+}
+
+model PaymentAttempt {
+  id           String   @id @default(cuid())
+  orderId      String
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  paymentId    String?
+  payment      Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  provider     String   @default("southpay")
+  sessionId    String?
+  status       String   @default("pending")
+  amount       Int
+  currency     String   @default("USD")
+  providerName String?
+  providerTxid String?
+  errorCode    String?
+  errorMessage String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([orderId])
+  @@map("payment_attempts")
+}
+
+// ── Checkout funnel tracking ──────────────────────────────────────
+
+model CheckoutSession {
+  id         String   @id @default(cuid())
+  orderId    String?
+  order      Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  productId  String?
+  product    Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  variantId  String?
+  variant    ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  step   String @default("started")
+  status String @default("in_progress") // in_progress | completed | abandoned
+
+  startedAt                 DateTime  @default(now())
+  customerDataCompletedAt   DateTime?
+  paymentPageViewedAt       DateTime?
+  paymentRedirectedAt       DateTime?
+  completedAt               DateTime?
+
+  @@index([productId])
+  @@index([status])
+  @@map("checkout_sessions")
+}
+
+// ── Webhooks ───────────────────────────────────────────────────────
+
+model WebhookEvent {
+  id          String    @id @default(cuid())
+  provider    String    @default("southpay")
+  eventId     String
+  eventType   String
+  payload     Json
+  processed   Boolean   @default(false)
+  processedAt DateTime?
+  error       String?
+  createdAt   DateTime  @default(now())
+
+  @@unique([provider, eventId])
+  @@map("webhook_events")
+}
+
+// ── Email templates (editable, per language) ──────────────────────
+
+model EmailTemplate {
+  id       String @id @default(cuid())
+  key      String // "order_confirmation" | "payment_failed" | "tracking"
+  locale   String // "en" | "es" | "fr" | "de"
+  subject  String
+  bodyHtml String
+
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@unique([key, locale])
+  @@map("email_templates")
+}
+
+// ── Store settings (singleton row) ────────────────────────────────
+
+model StoreSettings {
+  id                    String  @id @default("default")
+  storeName             String  @default("My Store")
+  storeLogo             String?
+  supportEmail          String?
+  supportPhone          String?
+  defaultCurrency       String  @default("USD")
+
+  checkoutSecureBadge   Boolean @default(true)
+  checkoutPrimaryColor  String  @default("#7C6FEB")
+  checkoutButtonText    String  @default("Pay Now")
+
+  paymentProvider       String  @default("southpay")
+  southpayEnabled       Boolean @default(true)
+  southpayEnvironment   String  @default("live") // live | sandbox
+
+  emailEnabled          Boolean @default(false)
+
+  updatedAt DateTime @updatedAt
+
+  @@map("store_settings")
+}

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: 'Payment settings' }) %>
+</head>
+<body>
+  <div class="shell">
+    <%- include('../partials/nav', { active: 'settings-payments' }) %>
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Payment settings</div>
+          <div class="page-sub">SouthPay configuration</div>
+        </div>
+      </div>
+
+      <% if (saved) { %><div class="alert alert-success">Settings saved.</div><% } %>
+      <% if (webhookRegistered) { %><div class="alert alert-success">Webhook endpoint registered with SouthPay.</div><% } %>
+      <% if (webhookError) { %><div class="alert alert-error">Couldn't register the webhook: <%= webhookError %></div><% } %>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="stat-label">Secrets (set via environment variables, not editable here)</div>
+        <dl class="kv" style="margin-top:12px">
+          <dt>API URL</dt><dd><%= env.apiUrl %></dd>
+          <dt>Secret key</dt><dd><%= env.hasSecretKey ? 'Configured' : 'Missing — set SOUTHPAY_SECRET_KEY' %></dd>
+          <dt>Webhook secret</dt><dd><%= env.hasWebhookSecret ? 'Configured' : 'Not set — webhook signature verification disabled' %></dd>
+        </dl>
+      </div>
+
+      <div class="section-title" style="margin-top:0">Webhook endpoint</div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="checkout-url-box">
+          <input type="text" readonly value="<%= webhookUrl %>" id="webhookUrl" />
+          <button type="button" class="btn btn-ghost" onclick="navigator.clipboard.writeText(document.getElementById('webhookUrl').value).then(()=>this.textContent='Copiado!')">Copiar</button>
+        </div>
+        <div class="stat-sub" style="margin-top:10px">This is the URL SouthPay sends signed order events to. Register it once — the signing secret is captured automatically.</div>
+
+        <% if (webhookListError) { %>
+          <div class="alert alert-error" style="margin-top:14px"><%= webhookListError %></div>
+        <% } else if (matchingEndpoint) { %>
+          <div style="margin-top:16px">
+            <dl class="kv">
+              <dt>Status</dt><dd><span class="badge <%= matchingEndpoint.status === 'active' ? 'badge-green' : matchingEndpoint.status === 'error' ? 'badge-red' : 'badge-gray' %>"><%= matchingEndpoint.status %></span></dd>
+              <dt>Events</dt><dd><%= (matchingEndpoint.subscribed_events || []).join(', ') %></dd>
+              <dt>Secret</dt><dd><%= matchingEndpoint.signing_secret_preview || '—' %></dd>
+              <dt>Success rate</dt><dd><%= matchingEndpoint.delivery_success_rate != null ? matchingEndpoint.delivery_success_rate + '%' : '—' %></dd>
+            </dl>
+          </div>
+        <% } else { %>
+          <div class="stat-sub" style="margin-top:14px">No webhook endpoint registered yet for this URL.</div>
+        <% } %>
+
+        <div style="margin-top:16px; display:flex; gap:8px;">
+          <form method="post" action="/admin/settings/payments/webhook/register">
+            <button type="submit" class="btn btn-primary"><%= matchingEndpoint ? 'Re-sync events' : 'Register webhook' %></button>
+          </form>
+          <% if (matchingEndpoint) { %>
+            <form method="post" action="/admin/settings/payments/webhook/rotate" onsubmit="return confirm('Rotating cuts over immediately — the old secret stops working the instant this returns. Continue?')">
+              <input type="hidden" name="endpointId" value="<%= matchingEndpoint.id %>" />
+              <button type="submit" class="btn btn-ghost">Rotate secret</button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+
+      <form method="post" action="/admin/settings/payments">
+        <div class="card">
+          <div class="grid grid-2">
+            <div class="field">
+              <label>Payment provider</label>
+              <input type="text" name="paymentProvider" value="<%= settings.paymentProvider %>" />
+            </div>
+            <div class="field">
+              <label>SouthPay environment</label>
+              <select name="southpayEnvironment">
+                <option value="live" <%= settings.southpayEnvironment === 'live' ? 'selected' : '' %>>Live</option>
+                <option value="sandbox" <%= settings.southpayEnvironment === 'sandbox' ? 'selected' : '' %>>Sandbox</option>
+              </select>
+            </div>
+          </div>
+          <div class="checkbox-row" style="margin-top:6px">
+            <input type="checkbox" id="southpayEnabled" name="southpayEnabled" <%= settings.southpayEnabled ? 'checked' : '' %> />
+            <label for="southpayEnabled" style="margin:0">SouthPay enabled</label>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top:16px">Save</button>
+      </form>
+    </main>
+  </div>
+</body>
+</html>
